@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
@@ -63,13 +64,18 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 
 
 class ProfileFeedItem(models.Model):
-    """Profile status update."""
+    """
+    Profile status update just like facebook status.
+    A use can have many statuses.
+    A status will belong to only 1 user.
+    this class will have a foreign key of User
+    """
 
-    user_profile = models.ForeignKey('UserProfile', on_delete=models.CASCADE)
+    # user_profile = models.ForeignKey('UserProfile', on_delete=models.CASCADE)
+    user_profile = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     status_text = models.CharField(max_length=255)
     created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         """Return the model as a string."""
-
-        return self.status_text
+        return self.user_profile.name + ", " + self.status_text

@@ -12,6 +12,8 @@ router.register('login-viewset', views.LoginViewSet, base_name='login-viewset')
 router.register('feed', views.UserProfileFeedViewSet)
 
 urlpatterns = [
+    # Will be accessible on api/hello-view/
     url(r'^hello-view/', views.HelloApiView.as_view()),
+    url(r'^login_apiview/', views.LoginApiView.as_view()),
     url(r'', include(router.urls))
 ]

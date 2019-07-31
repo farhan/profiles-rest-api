@@ -10,6 +10,8 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
 
 from . import serializers
 from . import models
@@ -17,6 +19,13 @@ from . import permissions
 
 # Create your views here.
 
+"""
+Features of API VIEWS:
+'Uses HTTP methods as function (get, post, patch, put, delete)',
+'It is similar to a traditional Django view',
+'Gives you the most control over your logic',
+'Is mapped manually to URLs'
+"""
 class HelloApiView(APIView):
     """Test API View."""
 
@@ -37,7 +46,8 @@ class HelloApiView(APIView):
     def post(self, request):
         """Create a hello message with our name."""
 
-        serializer = serializers.HelloSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
+        # serializer = serializers.HelloSerializer(data=request.data)
 
         if serializer.is_valid():
             name = serializer.data.get('name')
@@ -62,7 +72,12 @@ class HelloApiView(APIView):
 
         return Response({'method': 'delete'})
 
-
+"""
+Features of VIEW SET:
+'Uses actions (list, create, retrieve, update, partial_update)',
+'Automatically maps to URLs using Routers',
+'Provides more functionality with less code.'
+"""
 class HelloViewSet(viewsets.ViewSet):
     """Test API ViewSet."""
 
@@ -112,18 +127,26 @@ class HelloViewSet(viewsets.ViewSet):
 
         return Response({'http_method': 'DELETE'})
 
-
+"""
+MODEL VIEWSET:
+The ModelViewSet class inherits from GenericAPIView and includes implementations for various actions, 
+by mixing in the behavior of the various mixin classes.
+The actions provided by the ModelViewSet class are .list(), .retrieve(), .create(), .update(), 
+.partial_update(), and .destroy().
+"""
 class UserProfileViewSet(viewsets.ModelViewSet):
     """Handles creating, creating and updating profiles."""
 
     serializer_class = serializers.UserProfileSerializer
     queryset = models.UserProfile.objects.all()
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (permissions.UpdateOwnProfile,)
+    authentication_classes = (TokenAuthentication,)   # its a tuple
+    permission_classes = (permissions.UpdateOwnProfile,)  # its a tuple
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', 'email',)
 
-
+"""
+Both LoginViewSet & LoginApiView can be used for the sign in api
+"""
 class LoginViewSet(viewsets.ViewSet):
     """Checks email and password and returns an auth token."""
 
@@ -131,8 +154,11 @@ class LoginViewSet(viewsets.ViewSet):
 
     def create(self, request):
         """Use the ObtainAuthToken APIView to validate and create a token."""
-
         return ObtainAuthToken().post(request)
+
+class LoginApiView(ObtainAuthToken):
+   """Handle creating user authentication tokens"""
+   renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 
 class UserProfileFeedViewSet(viewsets.ModelViewSet):
@@ -145,5 +171,7 @@ class UserProfileFeedViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Sets the user profile to the logged in user."""
+        # Called by CreateModelMixin when saving a new object instance.
+        # https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview
 
         serializer.save(user_profile=self.request.user)
